@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  envoy:
+    build:
+      context: ./envoy
+      dockerfile: Dockerfile
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy.yaml
+      - ./target/wasm32-unknown-unknown/release/envoy_wasm_regional_routing.wasm:/etc/envoy_wasm_regional_routing.wasm
+    networks:
+      - envoy
+    expose:
+      - "10000"
+    ports:
+      - "10000:10000"
+networks:
+  envoy: {}
