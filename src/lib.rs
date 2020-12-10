@@ -28,14 +28,16 @@ impl Context for RegionalRouter {
             let data: HttpBinResponse = serde_json::from_slice(body.as_slice()).unwrap();
             
             info!("Routing to the region: {}", data.args.region);
+
             // NOTE: in the envoy.yaml we configured the route with `cluster_header: region`,
             // which means it will pick the cluster from the value of `region` HTTP header.
             // So here we get the region from our service discovery for given host, and set the
             // region header based on that. The rest should be taken care by Envoy.
-            // EXCEPT, it does not work as expected, for some reason Envoy does not "see" the new
-            // value of `region` header. Interestingly though, when it proxies request to the origin,
-            // it does pass the updated value.
             self.set_http_request_header(&"region", Some(&data.args.region));
+
+            // NOTE: for now routing table is not flushed automatically,
+            // this is a workaround. See https://github.com/proxy-wasm/spec/issues/16.
+            self.clear_http_route_cache();
             
             self.resume_http_request();
             
